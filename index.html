@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRK – Governing Layer Demo</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0a; color: #00ff9d; margin: 0; padding: 20px; line-height: 1.5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        h1 { text-align: center; color: #00ff9d; text-shadow: 0 0 10px #00ff9d; }
+        .panel { background: #111; border: 2px solid #00ff9d; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 0 15px rgba(0, 255, 157, 0.3); }
+        .swarm { display: flex; gap: 15px; flex-wrap: wrap; }
+        .agent { background: #1a1a1a; border: 1px solid #00cc7a; padding: 15px; border-radius: 6px; width: 180px; text-align: center; transition: all 0.3s; }
+        .agent.ungoverned { border-color: #ff4444; animation: chaos 1s infinite alternate; }
+        .agent.governed { border-color: #00ff9d; }
+        button { background: #00ff9d; color: #000; border: none; padding: 12px 24px; margin: 10px; font-weight: bold; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+        button:hover { background: #00cc7a; transform: scale(1.05); }
+        .log { background: #000; border: 1px solid #333; height: 250px; overflow-y: auto; padding: 15px; font-family: monospace; font-size: 14px; margin-top: 10px; white-space: pre-wrap; }
+        .status { font-weight: bold; padding: 8px; border-radius: 4px; margin: 10px 0; }
+        .allowed { background: #003300; color: #00ff9d; }
+        .blocked { background: #330000; color: #ff4444; }
+        @keyframes chaos { from { transform: translate(0, 0); } to { transform: translate(3px, 2px); } }
+        .certificate { font-size: 12px; background: #001a00; padding: 8px; border-left: 4px solid #00ff9d; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GRK – Governing Layer</h1>
+        <p style="text-align:center; color:#aaa;">Intent-Bound Authorization (IBA) for AI Agent Swarm</p>
+
+        <div class="panel">
+            <h2>Agent Swarm Status</h2>
+            <div class="swarm" id="swarm"></div>
+        </div>
+
+        <div class="panel">
+            <button onclick="runUngoverned()">Run Ungoverned Swarm (Chaos)</button>
+            <button onclick="runGoverned()">Run Governed Swarm (IBA Protected)</button>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+
+        <div class="panel">
+            <h2>Action Log</h2>
+            <div class="log" id="log"></div>
+        </div>
+
+        <div class="panel">
+            <h2>Intent Certificate</h2>
+            <div class="certificate" id="cert">
+                {"iss": "human-operator", "intent_id": "grk-swarm-001", "scope": ["research", "analysis", "summarize"], "valid_until": "2026-12-31", "sig": "ES256:0x..."}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const agents = [
+            {id: 1, name: "Researcher", action: "Query external data"},
+            {id: 2, name: "Analyzer", action: "Process sensitive info"},
+            {id: 3, name: "Summarizer", action: "Generate report"},
+            {id: 4, name: "Executor", action: "Take external action"}
+        ];
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            let color = '#aaa';
+            if (type === 'allowed') color = '#00ff9d';
+            if (type === 'blocked') color = '#ff4444';
+            log.innerHTML += `<span style="color:${color}">[${time}] ${message}</span><br>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function createAgents(governed) {
+            const swarm = document.getElementById('swarm');
+            swarm.innerHTML = '';
+            agents.forEach(agent => {
+                const div = document.createElement('div');
+                div.className = `agent ${governed ? 'governed' : 'ungoverned'}`;
+                div.innerHTML = `
+                    <strong>${agent.name}</strong><br>
+                    <small>${agent.action}</small><br>
+                    <span class="status ${governed ? 'allowed' : 'blocked'}">
+                        ${governed ? '✅ IBA Validated' : '⚠️ No Governance'}
+                    </span>
+                `;
+                swarm.appendChild(div);
+            });
+        }
+
+        function runUngoverned() {
+            createAgents(false);
+            addLog("=== UNGOVERNED SWARM STARTED ===", 'blocked');
+            addLog("Agent swarm running without intent binding...");
+            setTimeout(() => addLog("Unauthorized data access attempted → Potential leak", 'blocked'), 800);
+            setTimeout(() => addLog("Confused deputy attack simulated → Action executed outside intent", 'blocked'), 1600);
+            setTimeout(() => addLog("Swarm drift detected → Loss of control", 'blocked'), 2400);
+            addLog("=== CHAOS OUTCOME: High risk of intent blindness ===", 'blocked');
+        }
+
+        function runGoverned() {
+            createAgents(true);
+            addLog("=== GOVERNED SWARM STARTED (GRK IBA) ===", 'allowed');
+            addLog("Signed intent certificate loaded and validated", 'allowed');
+            setTimeout(() => addLog("Researcher: Query external data → IBA check: Scope matches → ALLOWED", 'allowed'), 600);
+            setTimeout(() => addLog("Analyzer: Process sensitive info → IBA check: Trajectory validated → ALLOWED", 'allowed'), 1300);
+            setTimeout(() => addLog("Executor: Take external action → IBA check: Action outside declared intent → BLOCKED", 'blocked'), 2000);
+            setTimeout(() => addLog("All actions cryptographically enforced. Tamper-proof audit trail created.", 'allowed'), 2800);
+            addLog("=== SAFE OUTCOME: Trust But Verify in Design (TBDE) achieved ===", 'allowed');
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        window.onload = () => {
+            createAgents(true);
+            addLog("GRK Governing Layer initialized with Intent-Bound Authorization.");
+            addLog("All agent actions validated against signed human intent.");
+        };
+    </script>
+</body>
+</html>
